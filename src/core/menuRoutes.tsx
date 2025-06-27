@@ -7,40 +7,46 @@ import OrderData from '../modules/order/OrderData';
 export interface AppRoute {
   path: string;
   element: React.ReactElement;
-  label?: string;
+  title?: string;
   icon?: React.ReactNode;
+  roles?: string[];
 }
 
 const routes: AppRoute[] = [
   {
     path: '/dashboard',
-    element: <h1>Hola Mundo</h1>,
-    label: 'Inicio',
+    element: <div className="content-container"><h1>Hola Mundo</h1></div>,
+    title: 'Inicio',
     icon: <HomeOutlined />,
+    roles: ['admin', 'user'],
   },
   {
     path: '/users',
     element: <UserForm />,
-    label: 'Usuarios',
+    title: 'Usuarios',
     icon: <UserOutlined />,
+    roles: ['admin'],
   },
   {
     path: '/products',
     element: <ProductData />,
-    label: 'Productos',
+    title: 'Productos',
     icon: <ShoppingOutlined />,
+    roles: ['admin', 'user'],
   },
   {
     path: '/orders',
     element: <OrderData />,
-    label: 'Órdenes',
+    title: 'Órdenes',
     icon: <ShoppingCartOutlined />,
+    roles: ['admin', 'user'],
   },
   {
-    path: '/report',
+    path: '/reportes',
     element: <UserForm />,
-    label: 'Reportes',
+    title: 'Reportes',
     icon: <BarChartOutlined />,
+    roles: ['admin'],
   },
 ];
 
