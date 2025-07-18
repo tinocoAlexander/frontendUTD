@@ -1,5 +1,6 @@
 import { Modal, Input, Select, Switch, Button } from 'antd';
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 const { Option } = Select;
 
@@ -28,10 +29,9 @@ export default function UserEditModal({ visible, user, onCancel, onSave }: UserE
         email: user.email || '',
         phone: user.phone || '',
         role: user.role || '',
-        status: user.status || false,
+        status: !!user.status,
       });
     } else {
-      // Modo creación: inicializar con valores vacíos
       setEditedUser({
         id: '',
         name: '',
@@ -47,20 +47,50 @@ export default function UserEditModal({ visible, user, onCancel, onSave }: UserE
     setEditedUser({ ...editedUser, [field]: value });
   };
 
-  const handleSaveClick = () => {
+  const validateAndSave = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]+$/;
+
+    if (!editedUser.name || !editedUser.email || !editedUser.role) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Datos incompletos',
+        text: 'Por favor completa todos los campos obligatorios.',
+      });
+      return;
+    }
+
+    if (!emailRegex.test(editedUser.email)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Correo inválido',
+        text: 'Por favor ingresa un correo válido.',
+      });
+      return;
+    }
+
+    if (!phoneRegex.test(editedUser.phone)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Teléfono inválido',
+        text: 'El teléfono solo debe contener números.',
+      });
+      return;
+    }
+
     onSave(editedUser);
   };
 
   return (
     <Modal
       title={user ? 'Editar Usuario' : 'Agregar Usuario'}
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       footer={[
         <Button key="cancel" onClick={onCancel}>
           Cancelar
         </Button>,
-        <Button key="save" type="primary" onClick={handleSaveClick}>
+        <Button key="save" type="primary" onClick={validateAndSave}>
           Guardar
         </Button>,
       ]}

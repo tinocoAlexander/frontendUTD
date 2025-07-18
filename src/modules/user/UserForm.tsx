@@ -109,12 +109,45 @@ export default function UserList() {
     setSelectedUser(null);
   };
 
-  const handleSave = async (editedUser: any) => {
+  const validateAndSave = async (editedUser: any) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]+$/;
+
+    if (!editedUser.name || !editedUser.email || !editedUser.role) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Datos incompletos',
+        text: 'Por favor completa todos los campos obligatorios.',
+      });
+      return;
+    }
+
+    if (!emailRegex.test(editedUser.email)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Correo inválido',
+        text: 'Por favor ingresa un correo válido.',
+      });
+      return;
+    }
+
+    if (!phoneRegex.test(editedUser.phone)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Teléfono inválido',
+        text: 'El teléfono solo debe contener números.',
+      });
+      return;
+    }
+
+    saveUser(editedUser);
+  };
+
+  const saveUser = async (editedUser: any) => {
     try {
       let response: Response;
 
       if (!editedUser.id) {
-        // Crear nuevo usuario
         response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -134,7 +167,6 @@ export default function UserList() {
           }),
         });
       } else {
-        // Actualizar usuario existente
         response = await fetch(
           `${import.meta.env.VITE_API_URL}/api/auth/update?email=${encodeURIComponent(
             editedUser.email
@@ -216,7 +248,7 @@ export default function UserList() {
         visible={isModalVisible}
         user={selectedUser}
         onCancel={handleCancel}
-        onSave={handleSave}
+        onSave={validateAndSave}
       />
     </div>
   );

@@ -15,7 +15,7 @@ export interface AppRoute {
 const routes: AppRoute[] = [
   {
     path: '/dashboard',
-    element: <div className="content-container"><h1>Hola Mundo</h1></div>,
+    element: <div className="content-container"><h1></h1></div>,
     title: 'Inicio',
     icon: <HomeOutlined />,
     roles: ['admin', 'user'],
@@ -40,13 +40,6 @@ const routes: AppRoute[] = [
     title: 'Órdenes',
     icon: <ShoppingCartOutlined />,
     roles: ['admin', 'user'],
-  },
-  {
-    path: '/reportes',
-    element: <UserForm />,
-    title: 'Reportes',
-    icon: <BarChartOutlined />,
-    roles: ['admin'],
   },
 ];
 

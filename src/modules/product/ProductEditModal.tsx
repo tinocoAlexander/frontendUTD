@@ -1,6 +1,7 @@
 
 import { Modal, Input, Switch, Button } from 'antd';
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 interface ProductEditModalProps {
   visible: boolean;
@@ -47,6 +48,14 @@ export default function ProductEditModal({ visible, product, onCancel, onSave }:
   };
 
   const handleSaveClick = () => {
+    if (!editedProduct.name || editedProduct.price <= 0 || editedProduct.quantity < 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Datos inválidos',
+        text: 'Nombre, precio (mayor a 0) y cantidad (>=0) son obligatorios.',
+      });
+      return;
+    }
     onSave(editedProduct);
   };
 

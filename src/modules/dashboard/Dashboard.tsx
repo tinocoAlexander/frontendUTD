@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import MenuDynamic from './MenuDynamic';
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 const Dashboard: React.FC = () => {
   const { logout } = useAuth();
@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
       </Sider>
       <Layout>
         <Header style={{ background: '#fff', padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0 }}>Dashboard</h1>
+          <h1 style={{ margin: 0 }}></h1>
           <Button type="primary" onClick={handleLogout}>
             Cerrar Sesión
           </Button>
@@ -29,7 +29,6 @@ const Dashboard: React.FC = () => {
         <Content style={{ margin: '24px 16px 0', padding: 24, background: '#fff', minHeight: 280 }}>
           <Outlet />
         </Content>
-        <Footer style={{ textAlign: 'center' }}>Footer</Footer>
       </Layout>
     </Layout>
   );
