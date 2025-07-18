@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from 'react';
-import { Table, Typography, Input, Modal, Button } from 'antd';
+import { Table, Typography, Input, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import Swal from 'sweetalert2';
-import ProductEditModal from './ProductEditModal'; // Ajusta la ruta según tu estructura
-
+import ProductEditModal from './ProductEditModal';
 
 export default function ProductList() {
   const [products, setProducts] = useState<any[]>([]);
@@ -13,52 +11,50 @@ export default function ProductList() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-  // Definir las columnas de la tabla
-const columns: ColumnsType<any> = [
-  {
-    title: 'Nombre',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: 'Descripción',
-    dataIndex: 'description',
-    key: 'description',
-  },
-  {
-    title: 'Cantidad',
-    dataIndex: 'quantity',
-    key: 'quantity',
-  },
-  {
-    title: 'Precio',
-    dataIndex: 'price',
-    key: 'price',
-    render: (price: number) => `$${price.toFixed(2)}`,
-  },
-  {
-    title: 'Estado',
-    dataIndex: 'status',
-    key: 'status',
-    render: (status: boolean) => (status ? 'Activo' : 'Inactivo'),
-  },
-  {
-    title: 'Acciones',
-    key: 'actions',
-    render: (_, record) => (
-      <span>
-        <a onClick={() => handleEditProduct(record)}>Editar</a>
-      </span>
-    ),
-  },
-];
+  const columns: ColumnsType<any> = [
+    {
+      title: 'Nombre',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Descripción',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Cantidad',
+      dataIndex: 'quantity',
+      key: 'quantity',
+    },
+    {
+      title: 'Precio',
+      dataIndex: 'price',
+      key: 'price',
+      render: (price: number) => `$${price.toFixed(2)}`,
+    },
+    {
+      title: 'Estado',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: boolean) => (status ? 'Activo' : 'Inactivo'),
+    },
+    {
+      title: 'Acciones',
+      key: 'actions',
+      render: (_, record) => (
+        <span>
+          <a onClick={() => handleEditProduct(record)}>Editar</a>
+        </span>
+      ),
+    },
+  ];
 
-  // Obtener productos del backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/products/getall');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/getall`);
         if (!response.ok) throw new Error('Error al obtener productos');
         const data = await response.json();
         setProducts(
@@ -85,38 +81,34 @@ const columns: ColumnsType<any> = [
     fetchProducts();
   }, []);
 
-  // Filtrar productos
   const filteredProducts = products.filter((product: any) =>
     (product.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.status ? 'activo' : 'inactivo').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Abrir modal de edición
   const handleEditProduct = (product: any) => {
     setSelectedProduct(product);
     setIsModalVisible(true);
   };
 
-  // Abrir modal de agregar producto
   const handleAddProduct = () => {
     setSelectedProduct(null);
     setIsModalVisible(true);
   };
 
-  // Cerrar modal
   const handleCancel = () => {
     setIsModalVisible(false);
     setSelectedProduct(null);
   };
 
-  // Guardar cambios con conexión al backend
   const handleSave = async (editedProduct: any) => {
     try {
-      let response;
+      let response: Response;
+
       if (!editedProduct.id) {
         // Crear nuevo producto
-        response = await fetch('http://localhost:3000/api/products/create', {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -130,7 +122,7 @@ const columns: ColumnsType<any> = [
       } else {
         // Actualizar producto existente
         response = await fetch(
-          `http://localhost:3000/api/products/update/${encodeURIComponent(editedProduct.id)}`,
+          `${import.meta.env.VITE_API_URL}/api/products/update/${encodeURIComponent(editedProduct.id)}`,
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -147,22 +139,25 @@ const columns: ColumnsType<any> = [
 
       if (!response.ok) throw new Error('Error al guardar el producto');
       const updatedProductData = await response.json();
+
       if (!editedProduct.id) {
-        // Agregar nuevo producto a la lista
         setProducts([...products, updatedProductData]);
       } else {
-        // Actualizar producto existente en la lista
         const updatedProducts = products.map(product =>
           product.id === editedProduct.id ? { ...product, ...updatedProductData } : product
         );
         setProducts(updatedProducts);
       }
+
       setIsModalVisible(false);
       setSelectedProduct(null);
+
       Swal.fire({
         icon: 'success',
         title: 'Éxito',
-        text: !editedProduct.id ? 'Producto creado correctamente.' : 'Producto actualizado correctamente.',
+        text: !editedProduct.id
+          ? 'Producto creado correctamente.'
+          : 'Producto actualizado correctamente.',
       });
     } catch (error) {
       Swal.fire({

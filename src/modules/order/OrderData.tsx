@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
-import { Table, Typography, Input, Modal, Button } from 'antd';
+import { Table, Typography, Input, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import Swal from 'sweetalert2';
-import OrderEditModal from './OrderEditModal'; // Ajusta la ruta según tu estructura
+import OrderEditModal from './OrderEditModal';
 import { Tag } from 'antd';
 
 export default function OrderList() {
@@ -45,7 +44,6 @@ export default function OrderList() {
         let color = 'orange';
         if (status === 'pagado') color = 'green';
         else if (status === 'cancelado') color = 'red';
-
         return <Tag color={color}>{status.toUpperCase()}</Tag>;
       },
     },
@@ -65,7 +63,7 @@ export default function OrderList() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/orders/getall');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/getall`);
         if (!response.ok) throw new Error('Error al obtener órdenes');
         const data = await response.json();
         setOrders(
@@ -91,7 +89,6 @@ export default function OrderList() {
     fetchOrders();
   }, []);
 
-  // Filtrar órdenes
   const filteredOrders = orders.filter((order: any) =>
     (order.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (order.userId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,31 +99,28 @@ export default function OrderList() {
     )
   );
 
-  // Abrir modal de edición
   const handleEditOrder = (order: any) => {
     setSelectedOrder(order);
     setIsModalVisible(true);
   };
 
-  // Abrir modal de agregar orden
   const handleAddOrder = () => {
     setSelectedOrder(null);
     setIsModalVisible(true);
   };
 
-  // Cerrar modal
   const handleCancel = () => {
     setIsModalVisible(false);
     setSelectedOrder(null);
   };
 
-  // Guardar cambios con conexión al backend
   const handleSave = async (editedOrder: any) => {
     try {
-      let response = null;
+      let response: Response | null = null;
+
       if (!editedOrder.id) {
         // Crear nueva orden
-        response = await fetch('http://localhost:3000/api/orders/create', {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -149,7 +143,7 @@ export default function OrderList() {
         });
         if (!confirmCancel.isConfirmed) return;
         response = await fetch(
-          `http://localhost:3000/api/orders/delete/${encodeURIComponent(editedOrder.id)}`,
+          `${import.meta.env.VITE_API_URL}/api/orders/delete/${encodeURIComponent(editedOrder.id)}`,
           {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
@@ -166,7 +160,7 @@ export default function OrderList() {
         });
         if (!confirmComplete.isConfirmed) return;
         response = await fetch(
-          `http://localhost:3000/api/orders/update/${encodeURIComponent(editedOrder.id)}`,
+          `${import.meta.env.VITE_API_URL}/api/orders/update/${encodeURIComponent(editedOrder.id)}`,
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -179,10 +173,8 @@ export default function OrderList() {
       if (response) {
         const updatedOrderData = await response.json();
         if (!editedOrder.id) {
-          // Agregar nueva orden a la lista
           setOrders([...orders, updatedOrderData]);
         } else {
-          // Actualizar estado de la orden existente
           const updatedOrders = orders.map(order =>
             order.id === editedOrder.id ? { ...order, ...updatedOrderData } : order
           );

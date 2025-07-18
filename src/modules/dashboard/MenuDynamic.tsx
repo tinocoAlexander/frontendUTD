@@ -41,7 +41,7 @@ const MenuDynamic: React.FC = () => {
 
     const fetchMenuItems = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/menu/byrole', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/menu/byrole`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
