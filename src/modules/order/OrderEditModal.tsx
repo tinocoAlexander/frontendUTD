@@ -1,5 +1,6 @@
 import { Modal, Select, Button, Typography, Space, Input } from 'antd';
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 const { Text } = Typography;
 

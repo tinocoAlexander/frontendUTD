@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Table, Typography, Input, Button } from 'antd';
+import { Table, Typography, Input, Button, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import Swal from 'sweetalert2';
 import OrderEditModal from './OrderEditModal';
-import { Tag } from 'antd';
 
 export default function OrderList() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -12,7 +11,6 @@ export default function OrderList() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  // Definir las columnas de la tabla
   const columns: ColumnsType<any> = [
     {
       title: 'ID',
@@ -28,13 +26,14 @@ export default function OrderList() {
       title: 'Total',
       dataIndex: 'total',
       key: 'total',
-      render: (total: number) => `$${total.toFixed(2)}`,
+      render: (total: number) => `$${total?.toFixed(2) ?? '0.00'}`,
     },
     {
       title: 'Productos',
       dataIndex: 'products',
       key: 'products',
-      render: (products: any[]) => products.map(p => p.productId.name).join(', '),
+      render: (products: any[]) =>
+        products.map(p => p.productId?.name || p.productId || 'Desconocido').join(', '),
     },
     {
       title: 'Estado',
@@ -44,7 +43,7 @@ export default function OrderList() {
         let color = 'orange';
         if (status === 'pagado') color = 'green';
         else if (status === 'cancelado') color = 'red';
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
+        return <Tag color={color}>{status?.toUpperCase()}</Tag>;
       },
     },
     {
@@ -58,7 +57,6 @@ export default function OrderList() {
     },
   ];
 
-  // Obtener órdenes del backend
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -81,7 +79,7 @@ export default function OrderList() {
           title: 'Error',
           text: 'No se pudieron cargar las órdenes. Intenta de nuevo.',
         });
-        console.error('Error:', error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -92,10 +90,10 @@ export default function OrderList() {
   const filteredOrders = orders.filter((order: any) =>
     (order.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (order.userId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.total || 0).toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (order.total || 0).toString().includes(searchTerm) ||
     (order.status || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.products.some((p: any) =>
-      (p.productId.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (p.productId?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
@@ -116,85 +114,54 @@ export default function OrderList() {
 
   const handleSave = async (editedOrder: any) => {
     try {
-      let response: Response | null = null;
+      setLoading(true);
+      let response: Response;
+
+      const body = {
+        userId: editedOrder.userId,
+        products: editedOrder.products,
+        status: editedOrder.status,
+      };
 
       if (!editedOrder.id) {
-        // Crear nueva orden
         response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: editedOrder.userId,
-            products: editedOrder.products.map((p: any) => ({
-              productId: p.productId,
-              quantity: p.quantity || 1,
-            })),
-            status: editedOrder.status,
-          }),
+          body: JSON.stringify(body),
         });
-      } else if (editedOrder.status === 'cancelado') {
-        const confirmCancel = await Swal.fire({
-          title: '¿Estás seguro?',
-          text: '¿Deseas cancelar esta orden?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, cancelar',
-          cancelButtonText: 'No',
+      } else {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/update/${editedOrder.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: editedOrder.status }),
         });
-        if (!confirmCancel.isConfirmed) return;
-        response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/orders/delete/${encodeURIComponent(editedOrder.id)}`,
-          {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      } else if (editedOrder.status === 'pagado') {
-        const confirmComplete = await Swal.fire({
-          title: '¿Estás seguro?',
-          text: '¿Deseas completar esta orden?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, completar',
-          cancelButtonText: 'No',
-        });
-        if (!confirmComplete.isConfirmed) return;
-        response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/orders/update/${encodeURIComponent(editedOrder.id)}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'pagado' }),
-          }
-        );
       }
 
-      if (response && !response.ok) throw new Error('Error al guardar la orden');
-      if (response) {
-        const updatedOrderData = await response.json();
-        if (!editedOrder.id) {
-          setOrders([...orders, updatedOrderData]);
-        } else {
-          const updatedOrders = orders.map(order =>
-            order.id === editedOrder.id ? { ...order, ...updatedOrderData } : order
-          );
-          setOrders(updatedOrders);
-        }
+      if (!response.ok) throw new Error('Error al guardar la orden');
+      const data = await response.json();
+
+      const updatedOrder = {
+        id: data._id,
+        userId: data.userId,
+        total: data.total,
+        products: data.products,
+        status: data.status,
+      };
+
+      if (!editedOrder.id) {
+        setOrders(prev => [...prev, updatedOrder]);
+      } else {
+        setOrders(prev => prev.map(o => o.id === editedOrder.id ? updatedOrder : o));
       }
+
+      Swal.fire({ icon: 'success', title: 'Éxito', text: 'Orden guardada correctamente.' });
+    } catch (err) {
+      console.error(err);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la orden.' });
+    } finally {
       setIsModalVisible(false);
       setSelectedOrder(null);
-      Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: !editedOrder.id ? 'Orden creada correctamente.' : `Orden ${editedOrder.status} correctamente.`,
-      });
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo guardar la orden.',
-      });
-      console.error('Error:', error);
+      setLoading(false);
     }
   };
 
@@ -215,7 +182,7 @@ export default function OrderList() {
       <Table
         columns={columns}
         dataSource={filteredOrders}
-        rowKey="id"
+        rowKey={(record) => record.id || record._id || Math.random().toString()}
         pagination={{ pageSize: 10 }}
         loading={loading}
       />

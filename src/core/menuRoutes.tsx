@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeOutlined, UserOutlined, ShoppingOutlined, ShoppingCartOutlined, BarChartOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined, ShoppingOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import UserForm from '../modules/user/UserForm';
 import ProductData from '../modules/product/ProductData';
 import OrderData from '../modules/order/OrderData';
